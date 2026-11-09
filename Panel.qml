@@ -54,7 +54,7 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
+    contentWidth: panel.fittedContentWidth(Style.space(390))
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(560))
 
     content: PanelKeyCatcher {
@@ -88,6 +88,49 @@ Panel {
           spacing: Style.space(12)
 
           // ----------------------------------------------------
+          // Error / Notice Banner (if any calendar failed)
+          // ----------------------------------------------------
+          BorderSurface {
+            visible: service.errors && service.errors.length > 0
+            width: parent.width
+            implicitHeight: errCol.implicitHeight + Style.space(16)
+            color: Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.12)
+            radius: Style.radius(8)
+            border.color: Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.35)
+            border.width: 1
+
+            Column {
+              id: errCol
+              anchors.fill: parent
+              anchors.margins: Style.space(10)
+              spacing: Style.space(4)
+
+              Text {
+                textFormat: Text.PlainText
+                text: "Calendar Sync Notice"
+                font.family: root.fontFamily
+                font.bold: true
+                font.pixelSize: Style.font.caption
+                color: root.urgent
+              }
+
+              Repeater {
+                model: service.errors
+                Text {
+                  required property var modelData
+                  width: errCol.width
+                  wrapMode: Text.Wrap
+                  textFormat: Text.PlainText
+                  text: modelData
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.caption * 0.9
+                  color: root.foreground
+                }
+              }
+            }
+          }
+
+          // ----------------------------------------------------
           // Header: Not Configured Banner
           // ----------------------------------------------------
           BorderSurface {
@@ -118,7 +161,7 @@ Panel {
                 textFormat: Text.PlainText
                 width: parent.width
                 wrapMode: Text.Wrap
-                text: "To show your upcoming Notion / Google events in the bar:\n\n1. In Google Calendar, go to Settings → Click your calendar.\n2. Scroll to 'Secret address in iCal format' and copy it.\n3. Save it to ~/.config/gcalendar-tray/config.json or pass it in shell.json."
+                text: "To show your events in the bar:\n\n1. In Google Calendar, go to Settings → Click your calendar.\n2. Scroll to 'Secret address in iCal format' and copy it.\n3. Add your calendars to ~/.config/gcalendar-tray/config.json."
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 color: Qt.darker(root.foreground, 1.25)
@@ -194,6 +237,26 @@ Panel {
                   font.bold: true
                   font.pixelSize: Style.font.caption
                   color: root.foreground
+                }
+
+                // Calendar Name Tag (if multiple calendars)
+                BorderSurface {
+                  visible: service.calendarCount > 1 && service.focusEvent && service.focusEvent.calendar_name !== ""
+                  anchors.verticalCenter: parent.verticalCenter
+                  height: Style.space(18)
+                  implicitWidth: calTagText.implicitWidth + Style.space(10)
+                  color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.1)
+                  radius: Style.radius(3)
+
+                  Text {
+                    id: calTagText
+                    anchors.centerIn: parent
+                    textFormat: Text.PlainText
+                    text: service.focusEvent ? service.focusEvent.calendar_name : ""
+                    font.family: root.fontFamily
+                    font.pixelSize: Style.font.caption * 0.8
+                    color: Qt.darker(root.foreground, 1.2)
+                  }
                 }
               }
 
@@ -280,7 +343,7 @@ Panel {
 
               Text {
                 textFormat: Text.PlainText
-                text: "✨ No upcoming events today"
+                text: "No more events today"
                 font.family: root.fontFamily
                 font.bold: true
                 font.pixelSize: Style.font.body
@@ -364,14 +427,37 @@ Panel {
                     Layout.fillWidth: true
                     spacing: 2
 
-                    Text {
-                      Layout.fillWidth: true
-                      textFormat: Text.PlainText
-                      text: modelData.title
-                      font.family: root.fontFamily
-                      font.pixelSize: Style.font.body
-                      color: root.foreground
-                      elide: Text.ElideRight
+                    RowLayout {
+                      spacing: Style.space(6)
+
+                      Text {
+                        Layout.fillWidth: true
+                        textFormat: Text.PlainText
+                        text: modelData.title
+                        font.family: root.fontFamily
+                        font.pixelSize: Style.font.body
+                        color: root.foreground
+                        elide: Text.ElideRight
+                      }
+
+                      // Calendar badge
+                      BorderSurface {
+                        visible: service.calendarCount > 1 && modelData.calendar_name !== ""
+                        height: Style.space(16)
+                        implicitWidth: rowCalText.implicitWidth + Style.space(8)
+                        color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.1)
+                        radius: Style.radius(3)
+
+                        Text {
+                          id: rowCalText
+                          anchors.centerIn: parent
+                          textFormat: Text.PlainText
+                          text: modelData.calendar_name
+                          font.family: root.fontFamily
+                          font.pixelSize: Style.font.caption * 0.75
+                          color: Qt.darker(root.foreground, 1.3)
+                        }
+                      }
                     }
 
                     Text {

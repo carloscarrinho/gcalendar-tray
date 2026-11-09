@@ -8,21 +8,21 @@ Item {
 
   property var settings: ({})
 
-  // Settings values
-  readonly property string icalUrl: setting("icalUrl", "")
   readonly property int refreshIntervalSec: intSetting("refreshIntervalSec", 60, 30, 1800)
   readonly property bool compact: setting("compact", false) === true
 
   // State
   property bool configured: false
   property bool refreshing: false
-  property string barText: "📅 Calendar"
+  property string barText: "No more events today"
   property bool barUrgent: false
   property string tooltip: "Calendar"
   property bool hasEvents: false
   property var focusEvent: null
   property var todayEvents: []
   property var upcomingEvents: []
+  property var errors: []
+  property int calendarCount: 0
   property string updatedAt: ""
   property string lastError: ""
 
@@ -46,16 +46,8 @@ Item {
     refreshing = true
     var cmd = ["python3", helperPath]
     if (root.compact) cmd.push("--compact")
-    if (root.icalUrl && root.icalUrl.trim() !== "") cmd.push(root.icalUrl.trim())
     fetchProcess.command = cmd
     fetchProcess.running = true
-  }
-
-  function saveIcalUrl(newUrl) {
-    if (!newUrl || newUrl.trim() === "") return
-    var cmd = ["python3", helperPath, newUrl.trim()]
-    saveProcess.command = cmd
-    saveProcess.running = true
   }
 
   function openUrl(url) {
@@ -80,15 +72,17 @@ Item {
       var data = JSON.parse(rawJson)
       if (!data) return
       root.configured = data.configured === true
-      root.barText = String(data.bar_text || "📅 Calendar")
+      root.barText = String(data.bar_text || "No more events today")
       root.barUrgent = data.bar_urgent === true
       root.tooltip = String(data.tooltip || "")
       root.hasEvents = data.has_events === true
       root.focusEvent = data.focus_event || null
       root.todayEvents = data.today_events || []
       root.upcomingEvents = data.upcoming_events || []
+      root.errors = data.errors || []
+      root.calendarCount = data.calendar_count || 0
       root.updatedAt = String(data.updated_at || "")
-      root.lastError = data.error ? String(data.error) : ""
+      root.lastError = (data.errors && data.errors.length > 0) ? data.errors[0] : ""
     } catch (err) {
       root.lastError = "Failed to parse calendar output"
     }
@@ -128,15 +122,6 @@ Item {
     }
     onExited: function(code) {
       root.refreshing = false
-    }
-  }
-
-  Process {
-    id: saveProcess
-    running: false
-    command: []
-    onExited: function(code) {
-      root.refresh()
     }
   }
 }
