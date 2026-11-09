@@ -14,6 +14,7 @@ Panel {
   manageIpc: true
 
   readonly property color foreground: bar ? bar.foreground : Commons.Color.foreground
+  readonly property color dim: Qt.darker(foreground, 1.45)
   readonly property color urgent: bar ? bar.urgent : Commons.Color.urgent
   readonly property color accent: Commons.Color.accent
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
@@ -88,14 +89,14 @@ Panel {
           spacing: Style.space(12)
 
           // ----------------------------------------------------
-          // Error / Notice Banner (if any calendar failed)
+          // Notice Banner (if any calendar failed)
           // ----------------------------------------------------
           BorderSurface {
             visible: service.errors && service.errors.length > 0
             width: parent.width
             implicitHeight: errCol.implicitHeight + Style.space(16)
-            color: Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.12)
-            radius: Style.radius(8)
+            color: Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.08)
+            radius: Style.radius(6)
             border.color: Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.35)
             border.width: 1
 
@@ -123,80 +124,27 @@ Panel {
                   textFormat: Text.PlainText
                   text: modelData
                   font.family: root.fontFamily
-                  font.pixelSize: Style.font.caption * 0.9
-                  color: root.foreground
+                  font.pixelSize: Style.font.caption * 0.95
+                  color: root.dim
                 }
               }
             }
           }
 
           // ----------------------------------------------------
-          // Header: Not Configured Banner
-          // ----------------------------------------------------
-          BorderSurface {
-            visible: !service.configured
-            width: parent.width
-            implicitHeight: setupCol.implicitHeight + Style.space(24)
-            color: Qt.rgba(Commons.Color.surface.r, Commons.Color.surface.g, Commons.Color.surface.b, 0.4)
-            radius: Style.radius(8)
-            border.color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.15)
-            border.width: 1
-
-            Column {
-              id: setupCol
-              anchors.fill: parent
-              anchors.margins: Style.space(12)
-              spacing: Style.space(8)
-
-              Text {
-                textFormat: Text.PlainText
-                text: "Calendar Not Configured"
-                font.family: root.fontFamily
-                font.bold: true
-                font.pixelSize: Style.font.body
-                color: root.foreground
-              }
-
-              Text {
-                textFormat: Text.PlainText
-                width: parent.width
-                wrapMode: Text.Wrap
-                text: "To show your events in the bar:\n\n1. In Google Calendar, go to Settings → Click your calendar.\n2. Scroll to 'Secret address in iCal format' and copy it.\n3. Add your calendars to ~/.config/gcalendar-tray/config.json."
-                font.family: root.fontFamily
-                font.pixelSize: Style.font.caption
-                color: Qt.darker(root.foreground, 1.25)
-              }
-
-              Row {
-                spacing: Style.space(8)
-
-                Button {
-                  text: "Open Google Calendar"
-                  onClicked: service.openGoogleCalendar()
-                }
-
-                Button {
-                  text: "Refresh"
-                  onClicked: service.refresh()
-                }
-              }
-            }
-          }
-
-          // ----------------------------------------------------
-          // Hero Card: Focus / Next Event
+          // Hero Card: Focus / Active Event
           // ----------------------------------------------------
           BorderSurface {
             visible: service.configured && service.focusEvent !== null
             width: parent.width
             implicitHeight: heroCol.implicitHeight + Style.space(24)
             color: service.focusEvent && service.focusEvent.is_now
-                   ? Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.12)
-                   : Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.10)
-            radius: Style.radius(8)
+                   ? Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.08)
+                   : Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.06)
+            radius: Style.radius(6)
             border.color: service.focusEvent && service.focusEvent.is_now
-                          ? Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.4)
-                          : Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.3)
+                          ? Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.35)
+                          : Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.25)
             border.width: 1
 
             Column {
@@ -245,7 +193,7 @@ Panel {
                   anchors.verticalCenter: parent.verticalCenter
                   height: Style.space(18)
                   implicitWidth: calTagText.implicitWidth + Style.space(10)
-                  color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.1)
+                  color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.08)
                   radius: Style.radius(3)
 
                   Text {
@@ -255,7 +203,7 @@ Panel {
                     text: service.focusEvent ? service.focusEvent.calendar_name : ""
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.caption * 0.8
-                    color: Qt.darker(root.foreground, 1.2)
+                    color: root.dim
                   }
                 }
               }
@@ -282,7 +230,7 @@ Panel {
                   text: service.focusEvent ? (service.focusEvent.start_str + " – " + service.focusEvent.end_str) : ""
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.body
-                  color: Qt.darker(root.foreground, 1.2)
+                  color: root.dim
                 }
 
                 Text {
@@ -305,6 +253,7 @@ Panel {
                   text: service.focusEvent ? ("Join " + (service.focusEvent.call_type || "Call")) : "Join"
                   iconText: "󰕧"
                   active: true
+                  bordered: true
                   onClicked: {
                     if (service.focusEvent && service.focusEvent.call_url) {
                       service.openUrl(service.focusEvent.call_url)
@@ -316,6 +265,7 @@ Panel {
                 Button {
                   text: "Notion Calendar"
                   iconText: "󰸗"
+                  bordered: true
                   onClicked: {
                     service.openNotionCalendar()
                     root.close()
@@ -326,14 +276,16 @@ Panel {
           }
 
           // ----------------------------------------------------
-          // Empty State (configured but no upcoming events today)
+          // Empty State (No more events today)
           // ----------------------------------------------------
           BorderSurface {
             visible: service.configured && service.todayEvents.length === 0 && (service.focusEvent === null || service.focusEvent.is_all_day)
             width: parent.width
             implicitHeight: emptyCol.implicitHeight + Style.space(24)
-            color: Qt.rgba(Commons.Color.surface.r, Commons.Color.surface.g, Commons.Color.surface.b, 0.3)
-            radius: Style.radius(8)
+            color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.04)
+            radius: Style.radius(6)
+            border.color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.10)
+            border.width: 1
 
             Column {
               id: emptyCol
@@ -341,13 +293,24 @@ Panel {
               anchors.margins: Style.space(14)
               spacing: Style.space(6)
 
-              Text {
-                textFormat: Text.PlainText
-                text: "No more events today"
-                font.family: root.fontFamily
-                font.bold: true
-                font.pixelSize: Style.font.body
-                color: root.foreground
+              Row {
+                spacing: Style.space(8)
+                Text {
+                  textFormat: Text.PlainText
+                  text: "󰸗"
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.body
+                  color: root.accent
+                }
+
+                Text {
+                  textFormat: Text.PlainText
+                  text: "No more events today"
+                  font.family: root.fontFamily
+                  font.bold: true
+                  font.pixelSize: Style.font.body
+                  color: root.foreground
+                }
               }
 
               Text {
@@ -355,7 +318,7 @@ Panel {
                 text: "Your schedule is clear for the rest of today."
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
-                color: Qt.darker(root.foreground, 1.3)
+                color: root.dim
               }
 
               Row {
@@ -363,6 +326,8 @@ Panel {
 
                 Button {
                   text: "Open Notion Calendar"
+                  iconText: "󰸗"
+                  bordered: true
                   onClicked: {
                     service.openNotionCalendar()
                     root.close()
@@ -380,13 +345,10 @@ Panel {
             width: parent.width
             spacing: Style.space(6)
 
-            Text {
-              textFormat: Text.PlainText
+            PanelSectionHeader {
               text: "Today's Agenda"
-              font.family: root.fontFamily
-              font.bold: true
-              font.pixelSize: Style.font.caption
-              color: Qt.darker(root.foreground, 1.4)
+              foreground: root.foreground
+              fontFamily: root.fontFamily
             }
 
             Repeater {
@@ -398,7 +360,7 @@ Panel {
                 implicitHeight: itemRow.implicitHeight + Style.space(12)
                 color: modelData.is_now
                        ? Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.08)
-                       : Qt.rgba(Commons.Color.surface.r, Commons.Color.surface.g, Commons.Color.surface.b, 0.25)
+                       : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.03)
                 radius: Style.radius(6)
                 border.color: modelData.is_now
                               ? Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.3)
@@ -445,7 +407,7 @@ Panel {
                         visible: service.calendarCount > 1 && modelData.calendar_name !== ""
                         height: Style.space(16)
                         implicitWidth: rowCalText.implicitWidth + Style.space(8)
-                        color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.1)
+                        color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.08)
                         radius: Style.radius(3)
 
                         Text {
@@ -455,7 +417,7 @@ Panel {
                           text: modelData.calendar_name
                           font.family: root.fontFamily
                           font.pixelSize: Style.font.caption * 0.75
-                          color: Qt.darker(root.foreground, 1.3)
+                          color: root.dim
                         }
                       }
                     }
@@ -476,6 +438,7 @@ Panel {
                     visible: modelData.call_url !== ""
                     text: "Join"
                     iconText: "󰕧"
+                    bordered: true
                     onClicked: {
                       service.openUrl(modelData.call_url)
                       root.close()
@@ -494,13 +457,10 @@ Panel {
             width: parent.width
             spacing: Style.space(6)
 
-            Text {
-              textFormat: Text.PlainText
+            PanelSectionHeader {
               text: "Upcoming"
-              font.family: root.fontFamily
-              font.bold: true
-              font.pixelSize: Style.font.caption
-              color: Qt.darker(root.foreground, 1.4)
+              foreground: root.foreground
+              fontFamily: root.fontFamily
             }
 
             Repeater {
@@ -510,8 +470,10 @@ Panel {
                 required property var modelData
                 width: mainColumn.width
                 implicitHeight: upcomingRow.implicitHeight + Style.space(10)
-                color: Qt.rgba(Commons.Color.surface.r, Commons.Color.surface.g, Commons.Color.surface.b, 0.15)
+                color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.02)
                 radius: Style.radius(6)
+                border.color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.06)
+                border.width: 1
 
                 RowLayout {
                   id: upcomingRow
@@ -525,7 +487,7 @@ Panel {
                     text: modelData.date_str + " " + modelData.start_str
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.caption
-                    color: Qt.darker(root.foreground, 1.3)
+                    color: root.dim
                   }
 
                   Text {
@@ -542,6 +504,10 @@ Panel {
             }
           }
 
+          PanelSeparator {
+            foreground: root.foreground
+          }
+
           // ----------------------------------------------------
           // Footer
           // ----------------------------------------------------
@@ -554,11 +520,12 @@ Panel {
               text: service.updatedAt !== "" ? ("Updated " + service.updatedAt) : ""
               font.family: root.fontFamily
               font.pixelSize: Style.font.caption
-              color: Qt.darker(root.foreground, 1.6)
+              color: root.dim
             }
 
             Button {
               text: service.refreshing ? "Refreshing…" : "Refresh (R)"
+              bordered: true
               onClicked: service.refresh()
             }
           }
