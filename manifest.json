@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "caduco.gcalendar-tray",
+  "name": "Calendar Tray",
+  "version": "1.0.0",
+  "author": "caduco",
+  "license": "MIT",
+  "description": "Next event indicator and agenda tray menu for Google Calendar and Notion Calendar",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Next Event",
+    "description": "Shows upcoming calendar events in the bar with 1-click meeting join and Notion Calendar launch.",
+    "category": "Time",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "icalUrl": "",
+      "refreshIntervalSec": 60,
+      "compact": false
+    },
+    "schema": [
+      {
+        "key": "icalUrl",
+        "type": "string",
+        "label": "Google Calendar Private iCal URL"
+      },
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Refresh interval (seconds)",
+        "min": 30,
+        "max": 1800,
+        "defaultValue": 60
+      },
+      {
+        "key": "compact",
+        "type": "boolean",
+        "label": "Compact bar label (countdown only)",
+        "defaultValue": false
+      }
+    ]
+  }
+}
