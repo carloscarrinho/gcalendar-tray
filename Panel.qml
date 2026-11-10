@@ -55,7 +55,7 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(390))
+    contentWidth: panel.fittedContentWidth(Style.space(480))
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(560))
 
     content: PanelKeyCatcher {
@@ -371,13 +371,14 @@ Panel {
                   id: itemRow
                   anchors.fill: parent
                   anchors.margins: Style.space(8)
-                  spacing: Style.space(10)
+                  spacing: Style.space(12)
 
                   // Time indicator
                   Text {
-                    Layout.preferredWidth: Style.space(50)
+                    id: timeLabel
+                    Layout.preferredWidth: timeLabel.implicitWidth
                     textFormat: Text.PlainText
-                    text: modelData.start_str
+                    text: modelData.start_str + (modelData.end_str ? "–" + modelData.end_str : "")
                     font.family: root.fontFamily
                     font.bold: true
                     font.pixelSize: Style.font.body
@@ -399,6 +400,8 @@ Panel {
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.body
                         color: root.foreground
+                        wrapMode: Text.Wrap
+                        maximumLineCount: 2
                         elide: Text.ElideRight
                       }
 
@@ -479,12 +482,13 @@ Panel {
                   id: upcomingRow
                   anchors.fill: parent
                   anchors.margins: Style.space(8)
-                  spacing: Style.space(10)
+                  spacing: Style.space(12)
 
                   Text {
-                    Layout.preferredWidth: Style.space(90)
+                    id: upDateLabel
+                    Layout.preferredWidth: upDateLabel.implicitWidth
                     textFormat: Text.PlainText
-                    text: modelData.date_str + " " + modelData.start_str
+                    text: modelData.date_str + "  " + modelData.start_str
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.caption
                     color: root.dim
@@ -497,7 +501,21 @@ Panel {
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.body
                     color: root.foreground
+                    wrapMode: Text.Wrap
+                    maximumLineCount: 2
                     elide: Text.ElideRight
+                  }
+
+                  // Quick Join button if meeting link exists
+                  Button {
+                    visible: modelData.call_url !== ""
+                    text: "Join"
+                    iconText: "󰕧"
+                    bordered: true
+                    onClicked: {
+                      service.openUrl(modelData.call_url)
+                      root.close()
+                    }
                   }
                 }
               }
