@@ -96,7 +96,7 @@ Panel {
             width: parent.width
             implicitHeight: errCol.implicitHeight + Style.space(16)
             color: Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.08)
-            radius: Style.radius(6)
+            radius: Style.cornerRadius
             border.color: Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.35)
             border.width: 1
 
@@ -141,7 +141,7 @@ Panel {
             color: service.focusEvent && service.focusEvent.is_now
                    ? Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.08)
                    : Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.06)
-            radius: Style.radius(6)
+            radius: Style.cornerRadius
             border.color: service.focusEvent && service.focusEvent.is_now
                           ? Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.35)
                           : Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.25)
@@ -162,7 +162,7 @@ Panel {
                   height: Style.space(20)
                   implicitWidth: tagText.implicitWidth + Style.space(12)
                   color: service.focusEvent && service.focusEvent.is_now ? root.urgent : root.accent
-                  radius: Style.radius(4)
+                  radius: Style.cornerRadius
 
                   Text {
                     id: tagText
@@ -194,7 +194,7 @@ Panel {
                   height: Style.space(18)
                   implicitWidth: calTagText.implicitWidth + Style.space(10)
                   color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.08)
-                  radius: Style.radius(3)
+                  radius: Style.cornerRadius
 
                   Text {
                     id: calTagText
@@ -215,7 +215,7 @@ Panel {
                 text: service.focusEvent ? service.focusEvent.title : ""
                 font.family: root.fontFamily
                 font.bold: true
-                font.pixelSize: Style.font.headline
+                font.pixelSize: Style.font.heading
                 color: root.foreground
                 wrapMode: Text.Wrap
                 maximumLineCount: 2
@@ -283,7 +283,7 @@ Panel {
             width: parent.width
             implicitHeight: emptyCol.implicitHeight + Style.space(24)
             color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.04)
-            radius: Style.radius(6)
+            radius: Style.cornerRadius
             border.color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.10)
             border.width: 1
 
@@ -361,7 +361,7 @@ Panel {
                 color: modelData.is_now
                        ? Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.08)
                        : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.03)
-                radius: Style.radius(6)
+                radius: Style.cornerRadius
                 border.color: modelData.is_now
                               ? Qt.rgba(root.urgent.r, root.urgent.g, root.urgent.b, 0.3)
                               : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.08)
@@ -408,7 +408,7 @@ Panel {
                         height: Style.space(16)
                         implicitWidth: rowCalText.implicitWidth + Style.space(8)
                         color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.08)
-                        radius: Style.radius(3)
+                        radius: Style.cornerRadius
 
                         Text {
                           id: rowCalText
@@ -471,7 +471,7 @@ Panel {
                 width: mainColumn.width
                 implicitHeight: upcomingRow.implicitHeight + Style.space(10)
                 color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.02)
-                radius: Style.radius(6)
+                radius: Style.cornerRadius
                 border.color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.06)
                 border.width: 1
 
