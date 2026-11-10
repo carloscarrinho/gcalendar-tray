@@ -137,10 +137,14 @@ def find_meeting_link(text):
 
 def expand_recurring(start_dt, end_dt, rrule_str, window_start, window_end):
     if not rrule_str:
-        return [(start_dt, end_dt)]
+        if start_dt <= window_end and end_dt >= window_start:
+            return [(start_dt, end_dt)]
+        return []
+
     parts = dict(p.split("=", 1) for p in rrule_str.split(";") if "=" in p)
     freq = parts.get("FREQ")
-    interval = int(parts.get("INTERVAL", 1))
+    interval = max(1, int(parts.get("INTERVAL", 1)))
+    count = int(parts.get("COUNT", 0)) if "COUNT" in parts else None
     until_str = parts.get("UNTIL")
     until_dt = None
     if until_str:
@@ -149,6 +153,8 @@ def expand_recurring(start_dt, end_dt, rrule_str, window_start, window_end):
                 until_dt = datetime.strptime(until_str.replace("Z", "")[:15], "%Y%m%dT%H%M%S").replace(tzinfo=start_dt.tzinfo)
             else:
                 until_dt = datetime.strptime(until_str[:8], "%Y%m%d").replace(tzinfo=start_dt.tzinfo)
+            if until_dt < window_start:
+                return []
         except Exception:
             pass
 
@@ -156,41 +162,63 @@ def expand_recurring(start_dt, end_dt, rrule_str, window_start, window_end):
     results = []
 
     if freq == "DAILY":
-        cur_start = start_dt
-        while cur_start < window_start:
-            days_behind = (window_start.date() - cur_start.date()).days
-            steps = max(1, days_behind // interval)
-            cur_start += timedelta(days=steps * interval)
-            if cur_start < window_start:
-                cur_start += timedelta(days=interval)
+        if count is not None:
+            max_end = start_dt + timedelta(days=count * interval)
+            if max_end < window_start:
+                return []
 
+        cur_start = start_dt
+        generated = 0
         while cur_start <= window_end:
+            if count is not None and generated >= count:
+                break
             if until_dt and cur_start > until_dt:
                 break
-            results.append((cur_start, cur_start + duration))
+            if cur_start >= window_start:
+                results.append((cur_start, cur_start + duration))
+            elif count is None:
+                days_behind = (window_start.date() - cur_start.date()).days
+                steps = max(1, days_behind // interval)
+                cur_start += timedelta(days=steps * interval)
+                continue
             cur_start += timedelta(days=interval)
+            generated += 1
 
     elif freq == "WEEKLY":
         day_map = {"MO": 0, "TU": 1, "WE": 2, "TH": 3, "FR": 4, "SA": 5, "SU": 6}
         byday = parts.get("BYDAY")
-        target_days = [day_map[d] for d in byday.split(",") if d in day_map] if byday else [start_dt.weekday()]
+        target_days = sorted([day_map[d] for d in byday.split(",") if d in day_map]) if byday else [start_dt.weekday()]
+
+        if count is not None:
+            weeks_needed = (count // len(target_days) + 2) * interval
+            max_end = start_dt + timedelta(weeks=weeks_needed)
+            if max_end < window_start:
+                return []
 
         cur_week_start = start_dt - timedelta(days=start_dt.weekday())
         cur_week_start = cur_week_start.replace(hour=start_dt.hour, minute=start_dt.minute, second=start_dt.second)
 
-        if cur_week_start < window_start - timedelta(days=7):
+        if count is None and cur_week_start < window_start - timedelta(days=14):
             weeks_behind = (window_start - cur_week_start).days // 7
             cur_week_start += timedelta(weeks=(weeks_behind // interval) * interval)
 
+        generated = 0
         while cur_week_start <= window_end:
             for day_idx in target_days:
                 inst_start = cur_week_start + timedelta(days=day_idx)
-                if start_dt <= inst_start <= window_end and inst_start >= window_start:
-                    if not (until_dt and inst_start > until_dt):
-                        results.append((inst_start, inst_start + duration))
+                if inst_start < start_dt:
+                    continue
+                if count is not None and generated >= count:
+                    break
+                if until_dt and inst_start > until_dt:
+                    break
+                if window_start <= inst_start <= window_end:
+                    results.append((inst_start, inst_start + duration))
+                generated += 1
             cur_week_start += timedelta(weeks=interval)
     else:
-        results.append((start_dt, end_dt))
+        if window_start <= start_dt <= window_end:
+            results.append((start_dt, end_dt))
 
     return results
 
@@ -298,11 +326,20 @@ def parse_events_from_ical(ical_text, cal_name, local_tz, now, window_start, win
         call_type, call_url = find_meeting_link(combined_text)
 
         _, rrule = extract_prop(block, "RRULE")
+        _, exdate_raw = extract_prop(block, "EXDATE")
+        exdate_set = set()
+        if exdate_raw:
+            for ex in exdate_raw.split(","):
+                ex_clean = ex.strip().replace("Z", "")
+                if len(ex_clean) >= 8:
+                    exdate_set.add(ex_clean[:8])
 
         instances = expand_recurring(dtstart, dtend, rrule.strip() if rrule else None, window_start, window_end)
 
         for inst_start, inst_end in instances:
             if inst_end <= now:
+                continue
+            if inst_start.strftime("%Y%m%d") in exdate_set:
                 continue
 
             events.append({
