@@ -39,6 +39,7 @@ def fetch_feed(source: CalendarSource, opener: Opener = urllib.request.urlopen) 
         with opener(req, timeout=TIMEOUT_SEC) as resp:
             return FetchResult(name, content=resp.read().decode("utf-8", errors="replace"))
     except urllib.error.HTTPError as e:
+        e.close()  # HTTPError wraps the open response body
         if e.code == 404 and "/public/" in url:
             return FetchResult(name, error=PUBLIC_404_HINT)
         return FetchResult(name, error=f"HTTP Error {e.code}: {e.reason}")

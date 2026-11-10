@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import io
 import os
-import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -41,7 +40,7 @@ def local_tz():
 
 
 @pytest.fixture
-def run_cli(monkeypatch, tmp_path):
+def run_cli(tmp_path):
     """Run the CLI end to end with a frozen clock and an isolated config path.
 
     Returns stdout as a string. This is the single seam golden tests go
@@ -49,19 +48,15 @@ def run_cli(monkeypatch, tmp_path):
     """
 
     def _run(argv: list[str], config: Path | None = None) -> str:
-        import calendar_fetch as cf
+        from gcal_tray import cli
 
-        class FrozenDatetime(datetime):
-            @classmethod
-            def now(cls, tz=None):
-                return FROZEN_NAIVE if tz is None else FROZEN_NOW.astimezone(tz)
-
-        monkeypatch.setattr(cf, "datetime", FrozenDatetime)
-        monkeypatch.setattr(cf, "CONFIG_PATH", config or (tmp_path / "missing-config.json"))
-        monkeypatch.setattr(sys, "argv", ["calendar_fetch.py", *argv])
         out = io.StringIO()
-        monkeypatch.setattr(sys, "stdout", out)
-        cf.main()
+        cli.main(
+            argv,
+            now=FROZEN_NOW,
+            config_path=config or (tmp_path / "missing-config.json"),
+            out=out,
+        )
         return out.getvalue()
 
     return _run

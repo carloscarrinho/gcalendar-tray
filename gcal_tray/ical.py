@@ -38,7 +38,7 @@ def unescape(s: str | None) -> str:
         s.replace("\\n", "\n")
         .replace("\\N", "\n")
         .replace("\\,", ",")
-        .replace("\;", ";")
+        .replace("\\;", ";")
         .replace("\\\\", "\\")
     )
 
