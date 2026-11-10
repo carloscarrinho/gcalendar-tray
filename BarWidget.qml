@@ -506,6 +506,25 @@ Panel {
                     elide: Text.ElideRight
                   }
 
+                  // Calendar badge
+                  BorderSurface {
+                    visible: service.calendarCount > 1 && modelData.calendar_name !== ""
+                    height: Style.space(16)
+                    implicitWidth: upCalText.implicitWidth + Style.space(8)
+                    color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.08)
+                    radius: Style.cornerRadius
+
+                    Text {
+                      id: upCalText
+                      anchors.centerIn: parent
+                      textFormat: Text.PlainText
+                      text: modelData.calendar_name
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption * 0.75
+                      color: root.dim
+                    }
+                  }
+
                   // Quick Join button if meeting link exists
                   Button {
                     visible: modelData.call_url !== ""
