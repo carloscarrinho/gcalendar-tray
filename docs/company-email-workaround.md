@@ -23,6 +23,7 @@ This guide outlines a simple, free workaround using **Google Apps Script** to au
 - **Zero dependencies:** Runs 100% on Google's infrastructure for free.
 - **Enterprise-friendly:** Runs natively inside Google Apps Script without needing external OAuth client approval.
 - **Auto-sync:** Keeps updates, time changes, and cancellations in sync.
+- **Full recurrence support:** Correctly tracks each individual recurring instance (e.g. daily standups) with its unique start timestamp.
 - **Preserves meeting links:** Extracts native Google Meet links (`hangoutLink`) as well as Zoom, Teams, and Webex links so the 1-click **Join** button appears in your tray widget.
 
 ---
@@ -75,7 +76,8 @@ Running the script inside your work account guarantees 100% access to all meetin
 ```javascript
 /**
  * Sync Work Calendar events to a personal secondary calendar.
- * Automatically mirrors events and conference links so a Secret iCal feed is available.
+ * Automatically mirrors events, recurring series, and conference links
+ * so a Secret iCal feed is available.
  */
 
 // ---------------------- CONFIGURATION ----------------------
@@ -119,6 +121,9 @@ function syncCalendar() {
           (item.conferenceData && item.conferenceData.entryPoints && item.conferenceData.entryPoints.find(e => e.entryPointType === "video")?.uri);
         if (link) {
           meetLinkMap.set(item.id, link);
+          if (item.recurringEventId && !meetLinkMap.has(item.recurringEventId)) {
+            meetLinkMap.set(item.recurringEventId, link);
+          }
         }
       }
     }
@@ -129,16 +134,21 @@ function syncCalendar() {
   const sourceEvents = sourceCal.getEvents(startTime, endTime);
   const targetEvents = targetCal.getEvents(startTime, endTime);
 
-  // Map existing synced events by source ID tag
+  // Map existing synced events by unique composite key (sId + startTime)
   const targetMap = new Map();
+  const untaggedOrLegacy = [];
+
   for (const tEvent of targetEvents) {
-    const syncId = tEvent.getTag("SYNC_SOURCE_ID");
-    if (syncId) {
-      targetMap.set(syncId, tEvent);
+    const syncKey = tEvent.getTag("SYNC_KEY");
+    if (syncKey) {
+      targetMap.set(syncKey, tEvent);
+    } else {
+      // Collect legacy or untagged events from prior runs for cleanup
+      untaggedOrLegacy.push(tEvent);
     }
   }
 
-  const seenSourceIds = new Set();
+  const seenKeys = new Set();
 
   for (const sEvent of sourceEvents) {
     // Skip events you declined
@@ -147,14 +157,19 @@ function syncCalendar() {
     }
 
     const sId = sEvent.getId();
-    seenSourceIds.add(sId);
-
-    const title = sEvent.getTitle();
+    const title = sEvent.getTitle() || "Untitled Event";
     const isAllDay = sEvent.isAllDayEvent();
+    const sStart = sEvent.getStartTime();
+    const sEnd = sEvent.getEndTime();
     const description = sEvent.getDescription() || "";
     const location = sEvent.getLocation() || "";
 
-    // Attach Google Meet link if not already in description or location
+    // Unique sync key distinguishes individual instances of recurring events
+    const startTimestamp = isAllDay ? sEvent.getAllDayStartDate().getTime() : sStart.getTime();
+    const syncKey = sId + "_" + startTimestamp;
+    seenKeys.add(syncKey);
+
+    // Inject Google Meet link into description so the iCal parser catches it
     const cleanId = sId.split("@")[0];
     const meetLink = meetLinkMap.get(cleanId);
     let finalDescription = description;
@@ -162,7 +177,7 @@ function syncCalendar() {
       finalDescription = (meetLink + "\n\n" + finalDescription).trim();
     }
 
-    const existing = targetMap.get(sId);
+    const existing = targetMap.get(syncKey);
 
     if (existing) {
       // Update details if changed
@@ -175,9 +190,9 @@ function syncCalendar() {
           existing.setAllDayDate(sEvent.getAllDayStartDate());
         }
       } else {
-        if (existing.getStartTime().getTime() !== sEvent.getStartTime().getTime() ||
-            existing.getEndTime().getTime() !== sEvent.getEndTime().getTime()) {
-          existing.setTime(sEvent.getStartTime(), sEvent.getEndTime());
+        if (existing.getStartTime().getTime() !== sStart.getTime() ||
+            existing.getEndTime().getTime() !== sEnd.getTime()) {
+          existing.setTime(sStart, sEnd);
         }
       }
     } else {
@@ -189,20 +204,25 @@ function syncCalendar() {
           location: location,
         });
       } else {
-        newEvent = targetCal.createEvent(title, sEvent.getStartTime(), sEvent.getEndTime(), {
+        newEvent = targetCal.createEvent(title, sStart, sEnd, {
           description: finalDescription,
           location: location,
         });
       }
-      newEvent.setTag("SYNC_SOURCE_ID", sId);
+      newEvent.setTag("SYNC_KEY", syncKey);
     }
   }
 
   // Delete events that were cancelled, declined, or removed from the source calendar
-  for (const [syncId, tEvent] of targetMap.entries()) {
-    if (!seenSourceIds.has(syncId)) {
+  for (const [syncKey, tEvent] of targetMap.entries()) {
+    if (!seenKeys.has(syncKey)) {
       tEvent.deleteEvent();
     }
+  }
+
+  // Clean up legacy/untagged events from earlier runs
+  for (const legacyEvent of untaggedOrLegacy) {
+    legacyEvent.deleteEvent();
   }
 }
 ```
