@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "configured": true,
+  "bar_text": "🕒 14:00 Design review",
+  "bar_urgent": false,
+  "tooltip": "Design review\n14:00 - 15:00 (Today at 14:00)\nVideo: Google Meet\nCalendar: Cal 1",
+  "has_events": true,
+  "focus_event": {
+    "calendar_name": "Cal 1",
+    "title": "Design review",
+    "start_str": "14:00",
+    "end_str": "15:00",
+    "date_str": "Mon, Nov 09",
+    "relative": "Today at 14:00",
+    "is_now": false,
+    "minutes_away": 240,
+    "is_all_day": false,
+    "call_type": "Google Meet",
+    "call_url": "https://meet.google.com/abc-defg-hij",
+    "location": ""
+  },
+  "today_events": [
+    {
+      "calendar_name": "Cal 1",
+      "title": "Design review",
+      "start_str": "14:00",
+      "end_str": "15:00",
+      "date_str": "Mon, Nov 09",
+      "relative": "Today at 14:00",
+      "is_now": false,
+      "minutes_away": 240,
+      "is_all_day": false,
+      "call_type": "Google Meet",
+      "call_url": "https://meet.google.com/abc-defg-hij",
+      "location": ""
+    }
+  ],
+  "upcoming_events": [
+    {
+      "calendar_name": "Cal 1",
+      "title": "Customer call",
+      "start_str": "09:00",
+      "end_str": "09:30",
+      "date_str": "Tue, Nov 10",
+      "relative": "Tomorrow 09:00",
+      "is_now": false,
+      "minutes_away": 1380,
+      "is_all_day": false,
+      "call_type": "Zoom",
+      "call_url": "https://acme.zoom.us/j/123456789?pwd=abc",
+      "location": "https://acme.zoom.us/j/123456789?pwd=abc"
+    },
+    {
+      "calendar_name": "Cal 1",
+      "title": "Untitled Event",
+      "start_str": "09:00",
+      "end_str": "10:00",
+      "date_str": "Wed, Nov 11",
+      "relative": "Wed 11 Nov 09:00",
+      "is_now": false,
+      "minutes_away": 2820,
+      "is_all_day": false,
+      "call_type": "",
+      "call_url": "",
+      "location": ""
+    },
+    {
+      "calendar_name": "Cal 1",
+      "title": "Vendor sync",
+      "start_str": "12:00",
+      "end_str": "12:30",
+      "date_str": "Thu, Nov 12",
+      "relative": "Thu 12 Nov 12:00",
+      "is_now": false,
+      "minutes_away": 4440,
+      "is_all_day": false,
+      "call_type": "Microsoft Teams",
+      "call_url": "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc%40thread.v2/0",
+      "location": ""
+    }
+  ],
+  "errors": [],
+  "calendar_count": 1,
+  "updated_at": "10:00"
+}

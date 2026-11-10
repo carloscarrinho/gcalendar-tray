@@ -1,0 +1,42 @@
+{
+  "ok": true,
+  "configured": true,
+  "bar_text": "🕒 In 4m: Quick huddle",
+  "bar_urgent": true,
+  "tooltip": "Quick huddle\n10:04 - 10:15 (In 4m)\nCalendar: Cal 1",
+  "has_events": true,
+  "focus_event": {
+    "calendar_name": "Cal 1",
+    "title": "Quick huddle",
+    "start_str": "10:04",
+    "end_str": "10:15",
+    "date_str": "Mon, Nov 09",
+    "relative": "In 4m",
+    "is_now": false,
+    "minutes_away": 4,
+    "is_all_day": false,
+    "call_type": "",
+    "call_url": "",
+    "location": ""
+  },
+  "today_events": [
+    {
+      "calendar_name": "Cal 1",
+      "title": "Quick huddle",
+      "start_str": "10:04",
+      "end_str": "10:15",
+      "date_str": "Mon, Nov 09",
+      "relative": "In 4m",
+      "is_now": false,
+      "minutes_away": 4,
+      "is_all_day": false,
+      "call_type": "",
+      "call_url": "",
+      "location": ""
+    }
+  ],
+  "upcoming_events": [],
+  "errors": [],
+  "calendar_count": 1,
+  "updated_at": "10:00"
+}

@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "configured": false,
+  "bar_text": "Set Calendar URL",
+  "bar_urgent": false,
+  "tooltip": "Click to configure Google Calendar / Notion Calendar URL",
+  "has_events": false,
+  "focus_event": null,
+  "today_events": [],
+  "upcoming_events": [],
+  "errors": [],
+  "updated_at": "10:00"
+}

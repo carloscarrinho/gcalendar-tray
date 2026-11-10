@@ -1,0 +1,16 @@
+[project]
+name = "gcalendar-tray"
+version = "1.0.0"            # keep in sync with manifest.json
+description = "Omarchy bar plugin: next calendar event and agenda from iCal feeds"
+requires-python = ">=3.11"
+dependencies = []            # runtime is stdlib-only (runs on the system python3)
+
+[dependency-groups]
+dev = ["pytest>=9,<10"]
+
+# No [build-system]: uv treats this as a virtual project, nothing is built or installed.
+
+[tool.pytest]
+testpaths = ["tests"]
+pythonpath = ["."]
+strict = true

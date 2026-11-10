@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "configured": true,
+  "bar_text": "No more events today",
+  "bar_urgent": false,
+  "tooltip": "No more events scheduled for today",
+  "has_events": true,
+  "focus_event": null,
+  "today_events": [],
+  "upcoming_events": [
+    {
+      "calendar_name": "Cal 1",
+      "title": "Early flight",
+      "start_str": "06:00",
+      "end_str": "08:00",
+      "date_str": "Tue, Nov 10",
+      "relative": "Tomorrow 06:00",
+      "is_now": false,
+      "minutes_away": 1200,
+      "is_all_day": false,
+      "call_type": "",
+      "call_url": "",
+      "location": ""
+    }
+  ],
+  "errors": [],
+  "calendar_count": 1,
+  "updated_at": "10:00"
+}

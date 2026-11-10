@@ -1,0 +1,56 @@
+{
+  "ok": true,
+  "configured": true,
+  "bar_text": "🔴 Now",
+  "bar_urgent": true,
+  "tooltip": "Sprint sync with the whole platform team\n09:30 - 10:30 (Now (ends in 30m))\nVideo: Google Meet\nCalendar: Cal 1",
+  "has_events": true,
+  "focus_event": {
+    "calendar_name": "Cal 1",
+    "title": "Sprint sync with the whole platform team",
+    "start_str": "09:30",
+    "end_str": "10:30",
+    "date_str": "Mon, Nov 09",
+    "relative": "Now (ends in 30m)",
+    "is_now": true,
+    "minutes_away": 30,
+    "is_all_day": false,
+    "call_type": "Google Meet",
+    "call_url": "https://meet.google.com/aaa-bbbb-ccc",
+    "location": ""
+  },
+  "today_events": [
+    {
+      "calendar_name": "Cal 1",
+      "title": "Sprint sync with the whole platform team",
+      "start_str": "09:30",
+      "end_str": "10:30",
+      "date_str": "Mon, Nov 09",
+      "relative": "Now (ends in 30m)",
+      "is_now": true,
+      "minutes_away": 30,
+      "is_all_day": false,
+      "call_type": "Google Meet",
+      "call_url": "https://meet.google.com/aaa-bbbb-ccc",
+      "location": ""
+    },
+    {
+      "calendar_name": "Cal 1",
+      "title": "Lunch",
+      "start_str": "12:00",
+      "end_str": "13:00",
+      "date_str": "Mon, Nov 09",
+      "relative": "In 2h",
+      "is_now": false,
+      "minutes_away": 120,
+      "is_all_day": false,
+      "call_type": "",
+      "call_url": "",
+      "location": ""
+    }
+  ],
+  "upcoming_events": [],
+  "errors": [],
+  "calendar_count": 1,
+  "updated_at": "10:00"
+}

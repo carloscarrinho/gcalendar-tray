@@ -1,0 +1,16 @@
+{
+  "ok": false,
+  "configured": true,
+  "bar_text": "No more events today",
+  "bar_urgent": false,
+  "tooltip": "No more events scheduled for today\nSync notices:\nCal 1: Network error: [Errno 2] No such file or directory: '/nonexistent/gcal-tray-test/feed.ics'",
+  "has_events": false,
+  "focus_event": null,
+  "today_events": [],
+  "upcoming_events": [],
+  "errors": [
+    "Cal 1: Network error: [Errno 2] No such file or directory: '/nonexistent/gcal-tray-test/feed.ics'"
+  ],
+  "calendar_count": 1,
+  "updated_at": "10:00"
+}

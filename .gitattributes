@@ -1,0 +1,3 @@
+# Keep fixture line endings byte-exact (one fixture is deliberately CRLF).
+*.ics -text
+tests/golden/*.json text eol=lf

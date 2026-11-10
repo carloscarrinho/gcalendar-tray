@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "configured": true,
+  "bar_text": "No more events today",
+  "bar_urgent": false,
+  "tooltip": "No more events scheduled for today",
+  "has_events": false,
+  "focus_event": null,
+  "today_events": [],
+  "upcoming_events": [],
+  "errors": [],
+  "calendar_count": 1,
+  "updated_at": "10:00"
+}

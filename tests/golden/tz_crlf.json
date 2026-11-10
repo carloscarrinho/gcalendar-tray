@@ -1,0 +1,71 @@
+{
+  "ok": true,
+  "configured": true,
+  "bar_text": "🕒 16:00 Planning, Q4 ; budge…",
+  "bar_urgent": false,
+  "tooltip": "Planning, Q4 ; budget\nreview\n16:00 - 17:00 (Today at 16:00)\nVideo: Webex\nCalendar: Cal 1",
+  "has_events": true,
+  "focus_event": {
+    "calendar_name": "Cal 1",
+    "title": "Planning, Q4 ; budget\nreview",
+    "start_str": "16:00",
+    "end_str": "17:00",
+    "date_str": "Mon, Nov 09",
+    "relative": "Today at 16:00",
+    "is_now": false,
+    "minutes_away": 360,
+    "is_all_day": false,
+    "call_type": "Webex",
+    "call_url": "https://acme.webex.com/meet/jdoe",
+    "location": "Room 4, 2nd floor"
+  },
+  "today_events": [
+    {
+      "calendar_name": "Cal 1",
+      "title": "Planning, Q4 ; budget\nreview",
+      "start_str": "16:00",
+      "end_str": "17:00",
+      "date_str": "Mon, Nov 09",
+      "relative": "Today at 16:00",
+      "is_now": false,
+      "minutes_away": 360,
+      "is_all_day": false,
+      "call_type": "Webex",
+      "call_url": "https://acme.webex.com/meet/jdoe",
+      "location": "Room 4, 2nd floor"
+    }
+  ],
+  "upcoming_events": [
+    {
+      "calendar_name": "Cal 1",
+      "title": "Bogus zone meeting",
+      "start_str": "15:00",
+      "end_str": "16:00",
+      "date_str": "Tue, Nov 10",
+      "relative": "Tomorrow 15:00",
+      "is_now": false,
+      "minutes_away": 1740,
+      "is_all_day": false,
+      "call_type": "",
+      "call_url": "",
+      "location": ""
+    },
+    {
+      "calendar_name": "Cal 1",
+      "title": "A very long meeting title that exceeds the bar limit",
+      "start_str": "10:00",
+      "end_str": "11:00",
+      "date_str": "Wed, Nov 11",
+      "relative": "Wed 11 Nov 10:00",
+      "is_now": false,
+      "minutes_away": 2880,
+      "is_all_day": false,
+      "call_type": "Whereby",
+      "call_url": "https://whereby.com/room-42",
+      "location": ""
+    }
+  ],
+  "errors": [],
+  "calendar_count": 1,
+  "updated_at": "10:00"
+}
