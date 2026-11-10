@@ -86,10 +86,10 @@ def unescape_ical(s):
 
 
 def extract_prop(vevent_str, prop_name):
-    m = re.search(r"^" + prop_name + r"(?:;([^:\r\n]*))?:([^\r\n]*)$", vevent_str, re.MULTILINE)
+    m = re.search(r"^" + prop_name + r"(?:;([^:\n]*))?:([^\n]*)$", vevent_str, re.MULTILINE)
     if not m:
         return None, None
-    return m.group(1), m.group(2)
+    return m.group(1), m.group(2).strip()
 
 
 def parse_ical_date(params, val, local_tz):
@@ -258,7 +258,8 @@ def fetch_single_feed(cal_entry):
 
 def parse_events_from_ical(ical_text, cal_name, local_tz, now, window_start, window_end):
     events = []
-    unfolded = re.sub(r"\r?\n[ \t]", "", ical_text)
+    normalized = ical_text.replace("\r\n", "\n").replace("\r", "\n")
+    unfolded = re.sub(r"\n[ \t]", "", normalized)
     vevent_pattern = re.compile(r"BEGIN:VEVENT(.*?)END:VEVENT", re.DOTALL)
 
     for match in vevent_pattern.finditer(unfolded):
