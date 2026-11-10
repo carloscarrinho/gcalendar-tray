@@ -47,13 +47,12 @@ def parse_vevent(block: str, cal_name: str, local_tz: tzinfo, now: datetime, win
     call_type, call_url = find_meeting_link(f"{location}\n{description}\n{title}")
 
     _, rrule_raw = ical.extract_prop(block, "RRULE")
-    _, exdate_raw = ical.extract_prop(block, "EXDATE")
-    exdates = ical.parse_exdates(exdate_raw)
+    ex_instants, ex_days = ical.parse_exdates(block, local_tz)
 
     rule = parse_rrule(rrule_raw) if rrule_raw else None
     events = []
     for inst_start, inst_end in expand(start, end, rule, window.start, window.end):
-        if inst_end <= now or inst_start.strftime("%Y%m%d") in exdates:
+        if inst_end <= now or inst_start in ex_instants or inst_start.date() in ex_days:
             continue
         events.append(Event(
             calendar_name=cal_name,

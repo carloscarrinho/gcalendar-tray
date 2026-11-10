@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator
-from datetime import datetime, timezone, tzinfo
+from datetime import date, datetime, timezone, tzinfo
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 _VEVENT_RE = re.compile(r"BEGIN:VEVENT(.*?)END:VEVENT", re.DOTALL)
@@ -95,16 +95,27 @@ def parse_ical_date(params: str | None, val: str | None, local_tz: tzinfo) -> tu
         return None, False
 
 
-def parse_exdates(raw: str | None) -> set[str]:
-    """Return the ``YYYYMMDD`` dates listed in an EXDATE value.
+def extract_props(block: str, name: str) -> list[tuple[str | None, str]]:
+    """Return ``(params, value)`` for every ``NAME[;params]:value`` line in a block."""
+    pattern = r"^" + re.escape(name) + r"(?:;([^:\n]*))?:([^\n]*)$"
+    return [(m.group(1), m.group(2).strip()) for m in re.finditer(pattern, block, re.MULTILINE)]
 
-    Matching is by calendar date only (time and TZID are ignored).
+
+def parse_exdates(block: str, local_tz: tzinfo) -> tuple[set[datetime], set[date]]:
+    """Return ``(instants, all_day_dates)`` excluded by the EXDATE lines of a block.
+
+    Date-time values (UTC, TZID or floating) are exact instants. Plain dates
+    exclude every instance that starts on that local calendar day.
     """
-    out: set[str] = set()
-    if not raw:
-        return out
-    for ex in raw.split(","):
-        ex_clean = ex.strip().replace("Z", "")
-        if len(ex_clean) >= 8:
-            out.add(ex_clean[:8])
-    return out
+    instants: set[datetime] = set()
+    days: set[date] = set()
+    for params, raw in extract_props(block, "EXDATE"):
+        for value in raw.split(","):
+            dt, is_all_day = parse_ical_date(params, value, local_tz)
+            if dt is None:
+                continue
+            if is_all_day:
+                days.add(dt.date())
+            else:
+                instants.add(dt)
+    return instants, days

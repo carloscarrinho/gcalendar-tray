@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -79,6 +79,15 @@ def test_unparseable(local_tz, val):
     assert ical.parse_ical_date(None, val, local_tz) == (None, False)
 
 
-def test_parse_exdates():
-    assert ical.parse_exdates("20261111T093000Z, 20261113T213000,2026") == {"20261111", "20261113"}
-    assert ical.parse_exdates(None) == set()
+def test_parse_exdates_instants_and_dates(local_tz):
+    block = ("EXDATE:20261111T093000Z, 20261113T213000\n"
+             "EXDATE;TZID=Asia/Tokyo:20261112T000000\n"
+             "EXDATE;VALUE=DATE:20261120\n")
+    instants, days = ical.parse_exdates(block, local_tz)
+    assert {dt.astimezone(timezone.utc).strftime("%Y%m%dT%H%M") for dt in instants} == {
+        "20261111T0930", "20261114T0030", "20261111T1500"}
+    assert days == {date(2026, 11, 20)}
+
+
+def test_parse_exdates_none(local_tz):
+    assert ical.parse_exdates("SUMMARY:x\n", local_tz) == (set(), set())

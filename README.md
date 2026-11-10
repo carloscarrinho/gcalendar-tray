@@ -89,7 +89,7 @@ Or simple list of URLs:
 | `config.py` | Reads and validates `config.json` |
 | `fetch.py` | Fetches HTTP feeds and local files in parallel, with an injectable opener |
 | `ical.py` | Line unfolding, properties, escapes, dates and TZID |
-| `rrule.py` | RRULE parsing and DAILY/WEEKLY expansion |
+| `rrule.py` | RRULE parsing and DAILY/WEEKLY/MONTHLY/YEARLY expansion |
 | `events.py` | Builds `Event`s from iCal text; dedupe |
 | `meetings.py` | Detects Meet, Zoom, Teams, Webex and Whereby links |
 | `timefmt.py` | Relative labels ("In 15m", "Tomorrow 09:00") |
@@ -120,14 +120,14 @@ python3 calendar_fetch.py tests/fixtures/recurring.ics | python3 -m json.tool   
 
 - `tests/test_cli_golden.py` runs the full CLI with a frozen clock (Mon 2026-11-09 10:00, `America/Sao_Paulo`)
   and checks that the output is byte-identical to `tests/golden/*.json`. That makes the JSON contract with the QML explicit.
-- `tests/test_known_bugs.py` lists known limitations as strict `xfail` tests: UTC `UNTIL`, MONTHLY/YEARLY
-  expansion, ordinal `BYDAY`, and EXDATE with TZID. Fixing one makes its test XPASS, which fails the run until you remove the marker.
+- `tests/test_recurrence_fixes.py` covers UTC `UNTIL`, MONTHLY/YEARLY (incl. `BYDAY=2MO`, `BYMONTHDAY`), and EXDATE with TZID.
+- CI (`.github/workflows/test.yml`) runs the suite on every push and pull request.
 
 ### Validate and reload
 
 ```bash
 omarchy plugin validate .
-qmllint -I "$OMARCHY_PATH/shell" Panel.qml Service.qml   # from the qt6-declarative package
+qmllint -I "$OMARCHY_PATH/shell" BarWidget.qml Service.qml   # from the qt6-declarative package
 omarchy-shell shell rescanPlugins
 qs log -p "$OMARCHY_PATH/shell" --tail 100
 ```
