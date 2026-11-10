@@ -68,3 +68,66 @@ Or simple list of URLs:
 - **N:** Launch Notion Calendar.
 - **G:** Open Google Calendar in browser.
 - **Esc:** Close panel.
+
+---
+
+## Dependencies / Permissions
+
+- **Runtime:** the system `python3` (3.11+), **standard library only**. Nothing is installed with the plugin.
+- **Network:** outbound HTTPS to the iCal URLs you configure, and nowhere else.
+- **Files:** reads `~/.config/gcalendar-tray/config.json`. Local `.ics` paths are also accepted as feed URLs.
+
+---
+
+## Development
+
+`Service.qml` runs `python3 calendar_fetch.py [--compact]`. That file is a thin shim around the
+`gcal_tray/` package:
+
+| Module | Responsibility |
+| --- | --- |
+| `config.py` | Reads and validates `config.json` |
+| `fetch.py` | Fetches HTTP feeds and local files in parallel, with an injectable opener |
+| `ical.py` | Line unfolding, properties, escapes, dates and TZID |
+| `rrule.py` | RRULE parsing and DAILY/WEEKLY expansion |
+| `events.py` | Builds `Event`s from iCal text; dedupe |
+| `meetings.py` | Detects Meet, Zoom, Teams, Webex and Whereby links |
+| `timefmt.py` | Relative labels ("In 15m", "Tomorrow 09:00") |
+| `agenda.py` | Splits events into today/upcoming and picks the focus event |
+| `render.py` | Bar text, urgency, tooltip and the JSON payload |
+| `cli.py` | Wires the stages together (argv, clock, stdout) |
+
+Only `config`, `fetch` and `cli` touch the outside world. Everything else is a pure function.
+
+### Tests
+
+Tests use [uv](https://docs.astral.sh/uv/) and pytest. pytest is a dev-only dependency group and is never needed at runtime.
+
+> [!IMPORTANT]
+> Omarchy refuses plugin folders that contain **symlinks**, and a virtualenv contains them
+> (`.venv/bin/python`). If a `.venv/` exists inside the plugin folder, `omarchy plugin validate`
+> fails, and the shell won't load the plugin. So keep the venv outside the folder:
+>
+> ```bash
+> export UV_PROJECT_ENVIRONMENT=~/.cache/venvs/gcalendar-tray
+> ```
+
+```bash
+uv run pytest                                   # full suite
+UPDATE_GOLDEN=1 uv run pytest tests/test_cli_golden.py   # re-snapshot after an intended output change
+python3 calendar_fetch.py tests/fixtures/recurring.ics | python3 -m json.tool   # try a fixture
+```
+
+- `tests/test_cli_golden.py` runs the full CLI with a frozen clock (Mon 2026-11-09 10:00, `America/Sao_Paulo`)
+  and checks that the output is byte-identical to `tests/golden/*.json`. That makes the JSON contract with the QML explicit.
+- `tests/test_known_bugs.py` lists known limitations as strict `xfail` tests: UTC `UNTIL`, MONTHLY/YEARLY
+  expansion, ordinal `BYDAY`, and EXDATE with TZID. Fixing one makes its test XPASS, which fails the run until you remove the marker.
+
+### Validate and reload
+
+```bash
+omarchy plugin validate .
+qmllint -I "$OMARCHY_PATH/shell" Panel.qml Service.qml   # from the qt6-declarative package
+omarchy-shell shell rescanPlugins
+qs log -p "$OMARCHY_PATH/shell" --tail 100
+```
