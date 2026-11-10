@@ -16,15 +16,15 @@ from datetime import datetime, date, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
 
-CONFIG_PATH = Path.home() / ".config" / "gcalendar-tray" / "config.json"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-MEETING_PATTERNS = [
-    ("Google Meet", r"https://meet\.google\.com/[a-z]{3}-[a-z]{4}-[a-z]{3}"),
-    ("Zoom", r"https://[a-zA-Z0-9\.\-_]*zoom\.us/(?:j/[0-9]+|my/[a-zA-Z0-9\.\-_]+)(?:\?[^\s<>\"']*)?"),
-    ("Microsoft Teams", r"https://teams\.microsoft\.com/l/meetup-join/[^\s<>\"']+"),
-    ("Webex", r"https://[a-zA-Z0-9\.\-_]*webex\.com/[^\s<>\"']+"),
-    ("Whereby", r"https://whereby\.com/[^\s<>\"']+"),
-]
+from gcal_tray.ical import normalize, iter_vevents, extract_prop, parse_ical_date, parse_exdates
+from gcal_tray.ical import unescape as unescape_ical
+from gcal_tray.meetings import find_meeting_link
+from gcal_tray.rrule import expand, parse_rrule
+from gcal_tray.timefmt import format_relative
+
+CONFIG_PATH = Path.home() / ".config" / "gcalendar-tray" / "config.json"
 
 
 def load_calendar_configs():
@@ -73,182 +73,6 @@ def load_calendar_configs():
     return configs
 
 
-def unescape_ical(s):
-    if not s:
-        return ""
-    return (
-        s.replace("\\n", "\n")
-        .replace("\\N", "\n")
-        .replace("\\,", ",")
-        .replace("\\;", ";")
-        .replace("\\\\", "\\")
-    )
-
-
-def extract_prop(vevent_str, prop_name):
-    m = re.search(r"^" + prop_name + r"(?:;([^:\n]*))?:([^\n]*)$", vevent_str, re.MULTILINE)
-    if not m:
-        return None, None
-    return m.group(1), m.group(2).strip()
-
-
-def parse_ical_date(params, val, local_tz):
-    if not val:
-        return None, False
-    val = val.strip()
-
-    # All-day date format: YYYYMMDD
-    if len(val) == 8 and val.isdigit():
-        d = datetime.strptime(val, "%Y%m%d").date()
-        return datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=local_tz), True
-
-    # UTC datetime: YYYYMMDDTHHMMSSZ
-    if val.endswith("Z"):
-        dt = datetime.strptime(val[:-1][:15], "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
-        return dt.astimezone(local_tz), False
-
-    # Timezone specified in params: DTSTART;TZID=...:YYYYMMDDTHHMMSS
-    tz = local_tz
-    if params:
-        for param in params.split(";"):
-            if param.startswith("TZID="):
-                tz_name = param.split("=", 1)[1].strip('"')
-                try:
-                    tz = ZoneInfo(tz_name)
-                except Exception:
-                    pass
-
-    try:
-        dt = datetime.strptime(val[:15], "%Y%m%dT%H%M%S").replace(tzinfo=tz)
-        return dt.astimezone(local_tz), False
-    except Exception:
-        return None, False
-
-
-def find_meeting_link(text):
-    if not text:
-        return None, None
-    for name, pattern in MEETING_PATTERNS:
-        m = re.search(pattern, text)
-        if m:
-            return name, m.group(0)
-    return None, None
-
-
-def expand_recurring(start_dt, end_dt, rrule_str, window_start, window_end):
-    if not rrule_str:
-        if start_dt <= window_end and end_dt >= window_start:
-            return [(start_dt, end_dt)]
-        return []
-
-    parts = dict(p.split("=", 1) for p in rrule_str.split(";") if "=" in p)
-    freq = parts.get("FREQ")
-    interval = max(1, int(parts.get("INTERVAL", 1)))
-    count = int(parts.get("COUNT", 0)) if "COUNT" in parts else None
-    until_str = parts.get("UNTIL")
-    until_dt = None
-    if until_str:
-        try:
-            if "T" in until_str:
-                until_dt = datetime.strptime(until_str.replace("Z", "")[:15], "%Y%m%dT%H%M%S").replace(tzinfo=start_dt.tzinfo)
-            else:
-                until_dt = datetime.strptime(until_str[:8], "%Y%m%d").replace(tzinfo=start_dt.tzinfo)
-            if until_dt < window_start:
-                return []
-        except Exception:
-            pass
-
-    duration = end_dt - start_dt
-    results = []
-
-    if freq == "DAILY":
-        if count is not None:
-            max_end = start_dt + timedelta(days=count * interval)
-            if max_end < window_start:
-                return []
-
-        cur_start = start_dt
-        generated = 0
-        while cur_start <= window_end:
-            if count is not None and generated >= count:
-                break
-            if until_dt and cur_start > until_dt:
-                break
-            if cur_start >= window_start:
-                results.append((cur_start, cur_start + duration))
-            elif count is None:
-                days_behind = (window_start.date() - cur_start.date()).days
-                steps = max(1, days_behind // interval)
-                cur_start += timedelta(days=steps * interval)
-                continue
-            cur_start += timedelta(days=interval)
-            generated += 1
-
-    elif freq == "WEEKLY":
-        day_map = {"MO": 0, "TU": 1, "WE": 2, "TH": 3, "FR": 4, "SA": 5, "SU": 6}
-        byday = parts.get("BYDAY")
-        target_days = sorted([day_map[d] for d in byday.split(",") if d in day_map]) if byday else [start_dt.weekday()]
-
-        if count is not None:
-            weeks_needed = (count // len(target_days) + 2) * interval
-            max_end = start_dt + timedelta(weeks=weeks_needed)
-            if max_end < window_start:
-                return []
-
-        cur_week_start = start_dt - timedelta(days=start_dt.weekday())
-        cur_week_start = cur_week_start.replace(hour=start_dt.hour, minute=start_dt.minute, second=start_dt.second)
-
-        if count is None and cur_week_start < window_start - timedelta(days=14):
-            weeks_behind = (window_start - cur_week_start).days // 7
-            cur_week_start += timedelta(weeks=(weeks_behind // interval) * interval)
-
-        generated = 0
-        while cur_week_start <= window_end:
-            for day_idx in target_days:
-                inst_start = cur_week_start + timedelta(days=day_idx)
-                if inst_start < start_dt:
-                    continue
-                if count is not None and generated >= count:
-                    break
-                if until_dt and inst_start > until_dt:
-                    break
-                if window_start <= inst_start <= window_end:
-                    results.append((inst_start, inst_start + duration))
-                generated += 1
-            cur_week_start += timedelta(weeks=interval)
-    else:
-        if window_start <= start_dt <= window_end:
-            results.append((start_dt, end_dt))
-
-    return results
-
-
-def format_relative(dt_start, dt_end, now):
-    if dt_start <= now < dt_end:
-        rem_min = max(1, int((dt_end - now).total_seconds() / 60))
-        return f"Now (ends in {rem_min}m)", True, rem_min
-
-    diff = dt_start - now
-    total_min = int(diff.total_seconds() / 60)
-
-    if total_min < 0:
-        return "Ended", False, 0
-    if total_min < 60:
-        return f"In {total_min}m", False, total_min
-
-    hours = total_min // 60
-    rem_min = total_min % 60
-    if dt_start.date() == now.date():
-        if hours < 4:
-            return f"In {hours}h {rem_min}m" if rem_min > 0 else f"In {hours}h", False, total_min
-        return f"Today at {dt_start.strftime('%H:%M')}", False, total_min
-
-    if dt_start.date() == (now + timedelta(days=1)).date():
-        return f"Tomorrow {dt_start.strftime('%H:%M')}", False, total_min
-
-    return f"{dt_start.strftime('%a %d %b %H:%M')}", False, total_min
-
-
 def fetch_single_feed(cal_entry):
     name = cal_entry.get("name", "Calendar")
     url = cal_entry.get("url", "").strip()
@@ -286,12 +110,7 @@ def fetch_single_feed(cal_entry):
 
 def parse_events_from_ical(ical_text, cal_name, local_tz, now, window_start, window_end):
     events = []
-    normalized = ical_text.replace("\r\n", "\n").replace("\r", "\n")
-    unfolded = re.sub(r"\n[ \t]", "", normalized)
-    vevent_pattern = re.compile(r"BEGIN:VEVENT(.*?)END:VEVENT", re.DOTALL)
-
-    for match in vevent_pattern.finditer(unfolded):
-        block = match.group(1)
+    for block in iter_vevents(normalize(ical_text)):
 
         _, status = extract_prop(block, "STATUS")
         if status and status.strip().upper() == "CANCELLED":
@@ -327,14 +146,9 @@ def parse_events_from_ical(ical_text, cal_name, local_tz, now, window_start, win
 
         _, rrule = extract_prop(block, "RRULE")
         _, exdate_raw = extract_prop(block, "EXDATE")
-        exdate_set = set()
-        if exdate_raw:
-            for ex in exdate_raw.split(","):
-                ex_clean = ex.strip().replace("Z", "")
-                if len(ex_clean) >= 8:
-                    exdate_set.add(ex_clean[:8])
+        exdate_set = parse_exdates(exdate_raw)
 
-        instances = expand_recurring(dtstart, dtend, rrule.strip() if rrule else None, window_start, window_end)
+        instances = expand(dtstart, dtend, parse_rrule(rrule) if rrule else None, window_start, window_end)
 
         for inst_start, inst_end in instances:
             if inst_end <= now:
